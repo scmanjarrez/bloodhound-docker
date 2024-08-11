@@ -1,0 +1,13 @@
+FROM ubuntu:20.04
+
+RUN apt update -qq && DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
+    git curl ca-certificates libxtst6 libglib2.0-0 libgdk-pixbuf2.0-0 libgtk-3-0 libx11-xcb1 libxss1 libnss3 libasound2 \
+    && apt clean -y && rm -rf /var/lib/apt/lists/* \
+    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash \
+    && . ~/.nvm/nvm.sh && nvm install v16.20.2 && npm install -g electron-packager
+
+COPY entrypoint.sh .
+RUN git clone --depth 1 --branch 2.2.1 https://github.com/BloodHoundAD/BloodHound.git \
+    && cd BloodHound && . ~/.nvm/nvm.sh && npm install --legacy-peer-deps && npm run linuxbuild
+
+ENTRYPOINT ["/entrypoint.sh"]

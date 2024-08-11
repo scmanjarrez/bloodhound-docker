@@ -1,0 +1,18 @@
+services:
+  bloodhound:
+    image: scmanjarrez/bloodhound:latest  # master
+    # image: scmanjarrez/bloodhound:4.3.1  # use stable v4.3.1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /tmp/shared:/tmp/shared  # directory to share files between host and container
+    environment:
+      DISPLAY: ":0.0"  # this should match your $DISPLAY value
+
+  neo4j:
+    image: neo4j:4.4.20
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      NEO4J_AUTH: "neo4j/bloodhound"  # default login credentials to automate login, check Dockerfile
