@@ -1,15 +1,16 @@
-FROM ubuntu:20.04
-
-RUN apt update -qq && DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
-    git curl ca-certificates libgtk-3-0 libglib2.0-0 libxss1 libasound2 libnss3 \
-    libdrm2 libgbm1 libx11-xcb1 \
-    && apt clean -y && rm -rf /var/lib/apt/lists/* \
-    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash \
-    && . ~/.nvm/nvm.sh && nvm install v16.20.2 && npm install -g electron-packager
-
-COPY entrypoint.sh .
+FROM node:16.20-bullseye AS build
 ARG tag=master
-RUN git clone --depth 1 --branch ${tag} https://github.com/BloodHoundAD/BloodHound.git \
-    && cd BloodHound && . ~/.nvm/nvm.sh && npm install --legacy-peer-deps && npm run build:linux
+RUN apt update -qq && DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
+    git curl && npm install -g electron-packager \
+    && git clone --depth 1 --branch ${tag} https://github.com/BloodHoundAD/BloodHound.git \
+    && cd BloodHound && npm install && npm run build:linux
+
+FROM debian:11-slim
+RUN apt update -qq && DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
+    libasound2 libx11-xcb1 libxss1 libnss3 libgtk-3-0 libglib2.0-0 libdrm2 libgbm1  \
+    && apt clean -y && rm -rf /var/lib/apt/lists/*
+COPY --from=build /BloodHound/BloodHound-linux-x64/ /BloodHound
+COPY --from=build /BloodHound/Collectors/ /Ingestors
+COPY entrypoint.sh .
 
 ENTRYPOINT ["/entrypoint.sh"]

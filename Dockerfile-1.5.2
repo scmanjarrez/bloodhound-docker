@@ -1,13 +1,15 @@
-FROM ubuntu:20.04
-
+FROM node:16.20-bullseye AS build
 RUN apt update -qq && DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
-    git curl ca-certificates libgtk2.0-0 libx11-xcb1 libxtst6 libxss1 libgconf-2-4 libnss3 libasound2 \
-    && apt clean -y && rm -rf /var/lib/apt/lists/* \
-    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash \
-    && . ~/.nvm/nvm.sh && nvm install v16.20.2 && npm install -g electron-packager
+    git curl && npm install -g electron-packager \
+    && git clone --depth 1 --branch 1.5.2 https://github.com/BloodHoundAD/BloodHound.git \
+    && cd BloodHound && npm install && npm run linuxbuild
 
+FROM debian:11-slim
+RUN apt update -qq && DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
+    libasound2 libx11-xcb1 libxss1 libnss3 libxtst6 libgtk2.0-0 libgconf-2-4  \
+    && apt clean -y && rm -rf /var/lib/apt/lists/*
+COPY --from=build /BloodHound/BloodHound-linux-x64/ /BloodHound
+COPY --from=build /BloodHound/Ingestors/ /Ingestors
 COPY entrypoint.sh .
-RUN git clone --depth 1 --branch 1.5.2 https://github.com/BloodHoundAD/BloodHound.git \
-    && cd BloodHound && . ~/.nvm/nvm.sh && npm install --legacy-peer-deps && npm run linuxbuild
 
 ENTRYPOINT ["/entrypoint.sh"]
