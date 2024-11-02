@@ -28,7 +28,7 @@ SI:localuser:kali
 reverting changes after use with `xhost -si:localuser:root`.
 
 ## File Sharing
-The directory `/tmp/test` is shared with the Bloodhound container.
+The directory `/tmp/shared` is shared with the Bloodhound container.
 You can use this to exchange files between your host and the container.
 For convenience, you can find the correct `SharpHound.exe` and `SharpHound.ps1`
 for each version in this directory.
